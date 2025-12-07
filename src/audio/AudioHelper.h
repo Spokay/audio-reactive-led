@@ -8,10 +8,23 @@
 #include <vector>
 
 namespace audio {
-    std::vector<std::complex<double>> iterativeFFT(
-            const std::vector<std::complex<double>> &signalsSequenceValues,
-            std::vector<std::complex<double>> &signalsFrequency
-    );
+    class AudioHelper {
+    public:
+        static std::complex<double> readOneSample();
+
+        std::vector<std::complex<double>> iterativeFFT(
+                const std::vector<std::complex<double>> &signalsSequenceValues,
+                std::vector<std::complex<double>> &signalsFrequency
+        ) const;
+
+    private:
+        void bitsReverseCopy(
+            const std::vector<std::complex<double> > &signalsSequenceValues,
+            std::vector<std::complex<double> > &signalsFrequency
+        ) const;
+
+        static unsigned int reverseBits(unsigned int n, int numBits);
+    };
 } // audio
 
 #endif //AUDIO_REACTIVE_LED_AUDIOUTILS_H
