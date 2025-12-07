@@ -38,12 +38,15 @@ namespace state {
 
         void AudioStateMachine::processState(const AudioState state) {
             switch (state) {
-                case COLLECTING_SAMPLES: this->collectSamples();
-
-                case PROCESSING_SAMPLES: this->processSamples();
-
-                case DISPLAYING_LED: this->displayLED();
-
+                case COLLECTING_SAMPLES:
+                    this->collectSamples();
+                    break;
+                case PROCESSING_SAMPLES:
+                    this->processSamples();
+                    break;
+                case DISPLAYING_LED:
+                    this->displayLED();
+                    break;
             }
         }
 
