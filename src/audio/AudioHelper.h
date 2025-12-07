@@ -5,22 +5,23 @@
 #ifndef AUDIO_REACTIVE_LED_AUDIOUTILS_H
 #define AUDIO_REACTIVE_LED_AUDIOUTILS_H
 #include <complex>
-#include <vector>
+#include <array>
+#include "config/configuration.h"
 
 namespace audio {
     class AudioHelper {
     public:
         static std::complex<double> readOneSample();
 
-        std::vector<std::complex<double>> iterativeFFT(
-                const std::vector<std::complex<double>> &signalsSequenceValues,
-                std::vector<std::complex<double>> &signalsFrequency
+        std::array<std::complex<double>, MIC_BUFFER_SIZE> iterativeFFT(
+                const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
+                std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
         ) const;
 
     private:
         void bitsReverseCopy(
-            const std::vector<std::complex<double> > &signalsSequenceValues,
-            std::vector<std::complex<double> > &signalsFrequency
+            const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
+            std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
         ) const;
 
         static unsigned int reverseBits(unsigned int n, int numBits);

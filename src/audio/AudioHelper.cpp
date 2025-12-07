@@ -4,25 +4,26 @@
 
 #include "AudioHelper.h"
 
+#include <array>
 #include <cmath>
 #include <complex>
 #include <esp32-hal-adc.h>
-#include <vector>
 
 #include "config/configuration.h"
 
 namespace audio {
     std::complex<double> AudioHelper::readOneSample() {
+        // Read microphone (ESP32 ADC is 12-bit: 0-4095)
         const uint16_t sample = analogRead(MIC_PIN);
         return std::complex<double>(sample, 0.0);
     }
 
-    std::vector<std::complex<double>> AudioHelper::iterativeFFT(
-        const std::vector<std::complex<double> > &signalsSequenceValues,
-        std::vector<std::complex<double> > &signalsFrequency
+    std::array<std::complex<double>, MIC_BUFFER_SIZE> AudioHelper::iterativeFFT(
+        const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
+        std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
     ) const {
-        const int n = signalsSequenceValues.size();
-        this->bitsReverseCopy(signalsSequenceValues, signalsFrequency);
+        const int n = inputBuffer.size();
+        this->bitsReverseCopy(inputBuffer, outputBuffer);
         for (int s = 1; s <= std::log2(n); s++) {
             const int m = std::pow(2, s);
             const double angle = -2.0 * M_PI / m;
@@ -30,24 +31,24 @@ namespace audio {
             for (int k = 0; k < n; k += m) {
                 std::complex<double> omega(1.0, 0.0);
                 for (int j = 0; j < m / 2; j++) {
-                    std::complex<double> t = omega * signalsFrequency[k + j + m / 2];
-                    std::complex<double> u = signalsFrequency[k + j];
-                    signalsFrequency[k + j] = u + t;
-                    signalsFrequency[k + j + m / 2] = u - t;
+                    std::complex<double> t = omega * outputBuffer[k + j + m / 2];
+                    std::complex<double> u = outputBuffer[k + j];
+                    outputBuffer[k + j] = u + t;
+                    outputBuffer[k + j + m / 2] = u - t;
                     omega = omega * omega_m;
                 }
             }
         }
-        return signalsFrequency;
+        return outputBuffer;
     }
 
     void AudioHelper::bitsReverseCopy(
-        const std::vector<std::complex<double> > &signalsSequenceValues,
-        std::vector<std::complex<double> > &signalsFrequency
+        const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
+        std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
     ) const {
-        const int numBits = std::log2(signalsSequenceValues.size());;
-        for (int i = 0; i < signalsSequenceValues.size(); i++) {
-            signalsFrequency[this->reverseBits(i, numBits)] = signalsSequenceValues[i];
+        const int numBits = std::log2(inputBuffer.size());;
+        for (int i = 0; i < inputBuffer.size(); i++) {
+            outputBuffer[this->reverseBits(i, numBits)] = inputBuffer[i];
         }
     }
 

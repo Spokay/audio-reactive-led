@@ -17,10 +17,13 @@ namespace config {
 #define COLOR_ORDER  GRB
 
 
-    // Microphone configuration
+// Microphone configuration
 #define MIC_PIN 36      // GPIO 36 (ADC1_0)
 #define AUDIO_LOWER_BOUND 0
 #define AUDIO_UPPER_BOUND 4095
+#define MIC_BUFFER_SIZE 256
+#define MIN_MAGNITUDE 0
+#define MAX_MAGNITUDE 10000
 
 }
 #endif //AUDIO_REACTIVE_LED_LEDCONFIGURATION_H
