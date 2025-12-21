@@ -13,7 +13,6 @@
 #include "FastLED.h"
 #include "audio/AudioHelper.h"
 #include "config/configuration.h"
-
 namespace state {
         AudioStateMachine::AudioStateMachine(
             const audio::AudioHelper &audioHelper, const led::LEDHelper &ledHelper
@@ -29,7 +28,7 @@ namespace state {
 
             /* Configure microphone pin */
             Serial.println("State machine: Initializing Microphone Input");
-            pinMode(MIC_PIN, INPUT);
+            // pinMode(MIC_PIN, INPUT);
         }
 
         AudioState AudioStateMachine::getCurrentState() const {
@@ -60,38 +59,18 @@ namespace state {
         }
 
         void AudioStateMachine::processSamples() {
-            audioHelper.iterativeFFT(inputBuffer, outputBuffer);
+            audio::AudioHelper::iterativeFFT(inputBuffer, outputBuffer);
             currentState = DISPLAYING_LED;
         }
 
         void AudioStateMachine::displayLED() {
+            const std::array<double, MATRIX_WIDTH> columnsValues = led::LEDHelper::mapFrequenciesToColumnsMagnitudes(outputBuffer);
 
-            /* Calculating average for each step of 8 magnitudes */
-            std::array<double, MATRIX_WIDTH> columnsValues;
-
-            for (int col = 0; col < MATRIX_WIDTH; ++col) {
-                const int startIdx = col * 8;
-                const int endIdx = startIdx + 8;
-
-                double sum = 0.0;
-                for (int i = startIdx; i < endIdx; ++i) {
-                    sum += std::abs(outputBuffer[i]);
-                }
-                columnsValues[col] = sum / 8.0;
-            }
-
-            /* Clear matrix */
             FastLED.clear();
-
-            //TODO: Remove after testing MAX_MAGNITUDE
-            const double maxMag = *std::max_element(columnsValues.begin(), columnsValues.end());
-            Serial.printf("Max magnitude: %.2f\n", maxMag);
-
-            /* Draw VU meter bars */
-            ledHelper.updateLED(columnsValues, leds);
-
-
+            led::LEDHelper::updateLED(columnsValues, leds);
             FastLED.show();
+
             currentState = COLLECTING_SAMPLES;
         }
-} // state
+
+}// state

@@ -7,28 +7,65 @@
 
 #include <Arduino.h>
 #include <array>
+#include <complex>
 
 #include "crgb.h"
 #include "config/configuration.h"
 
 namespace led {
-
     void LEDHelper::updateLED(const std::array<double, MATRIX_WIDTH> &columnValues, CRGB *leds) {
-        for (int x = 0; x < columnValues.size(); x++) {
-            int numLEDsToLight = map(columnValues[x],MIN_MAGNITUDE, MAX_MAGNITUDE,0, MATRIX_HEIGHT);
-            /* For the sake of security : limited between 0 et MATRIX_HEIGHT */
+        for (int x = 0; x < MATRIX_WIDTH; x++) {
+            int numLEDsToLight = map(columnValues[x], MIN_MAGNITUDE, MAX_MAGNITUDE, 0, MATRIX_HEIGHT);
             numLEDsToLight = constrain(numLEDsToLight, 0, MATRIX_HEIGHT);
 
-            for (int y = 0; y < numLEDsToLight; ++y) {
-                const uint8_t hue = map(y, 0, MATRIX_HEIGHT - 1, 0, 160);
-                leds[resolveLEDIndex(x, y)] = CHSV(hue, 255, 255);
+            for (int y = 0; y < MATRIX_HEIGHT; y++) {
+                const int ledIndex = resolveLeftRightLEDIndex(x, y);
+
+                if (y >= (MATRIX_HEIGHT - numLEDsToLight)) {
+                    const uint8_t hue = map(y, 0, MATRIX_HEIGHT - 1, 0, 160);
+                    leds[ledIndex] = CHSV(hue, 255, 255);
+                } else {
+                    leds[ledIndex] = CRGB::Black;
+                }
             }
         }
-
     }
 
-    // Convert (x,y) to LED index (zigzag pattern)
-    uint16_t LEDHelper::resolveLEDIndex(const uint8_t x, const uint8_t y) {
+    std::array<double, MATRIX_WIDTH> LEDHelper::mapFrequenciesToColumnsMagnitudes(const std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer) {
+        std::array<double, MATRIX_WIDTH> columnsValues{};
+
+        constexpr int usableBins = MIC_BUFFER_SIZE / 2;
+
+        // Logarithmic mapping
+        for (int col = 0; col < MATRIX_WIDTH; ++col) {
+            // Logarithmic ratio
+            const float colRatio = static_cast<float>(col) / MATRIX_WIDTH;
+            const float nextColRatio = static_cast<float>(col + 1) / MATRIX_WIDTH;
+
+            // Exponential mapping
+            const int startIdx = static_cast<int>(colRatio * colRatio * usableBins);
+            int endIdx = static_cast<int>(nextColRatio * nextColRatio * usableBins);
+
+            if (endIdx <= startIdx) endIdx = startIdx + 1;
+            if (endIdx > usableBins) endIdx = usableBins;
+
+            double sum = 0.0;
+            int count = 0;
+            for (int i = startIdx; i < endIdx; ++i) {
+                sum += std::abs(outputBuffer[i]);
+                count++;
+            }
+
+            columnsValues[col] = (count > 0) ? (sum / count) : 0.0;
+        }
+        return columnsValues;
+    }
+
+    uint16_t LEDHelper::resolveLeftRightLEDIndex(const uint8_t x, const uint8_t y) {
+            return y * MATRIX_WIDTH + x;
+    }
+
+    uint16_t LEDHelper::resolveZigzagLEDIndex(const uint8_t x, const uint8_t y) {
         uint16_t index;
 
         if (y % 2 == 0) {

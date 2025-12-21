@@ -2,13 +2,14 @@
 
 #include "state/AudioStateMachine.h"
 
-auto *audioHelper = new audio::AudioHelper();
+auto *audioSampler = new audio::AudioSampler();
+auto *audioHelper = new audio::AudioHelper(*audioSampler);
 auto *ledHelper = new led::LEDHelper();
 auto *audioStateMachine = new state::AudioStateMachine(*audioHelper, *ledHelper);
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);  // Give serial time to initialize
+    delay(1000);
 
     Serial.println("Starting audio-reactive LED matrix...");
 
@@ -20,8 +21,6 @@ void setup() {
 
 void loop() {
     const state::AudioState currentState = audioStateMachine->getCurrentState();
-    Serial.printf("Processing state : %d", currentState);
     audioStateMachine->processState(currentState);
-
-    delay(10);  // Small delay for stability
+    delay(10);
 }

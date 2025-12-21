@@ -9,21 +9,26 @@
 #include <complex>
 #include <esp32-hal-adc.h>
 
+#include "AudioSampler.h"
 #include "config/configuration.h"
-
 namespace audio {
+
+    AudioHelper::AudioHelper(
+        const AudioSampler &audio_sampler
+    ) : audioSampler(audio_sampler) {}
+
     std::complex<double> AudioHelper::readOneSample() {
-        // Read microphone (ESP32 ADC is 12-bit: 0-4095)
-        const uint16_t sample = analogRead(MIC_PIN);
-        return std::complex<double>(sample, 0.0);
+        double sample = audioSampler.generateSample();
+        return {sample, 0.0};
     }
 
     std::array<std::complex<double>, MIC_BUFFER_SIZE> AudioHelper::iterativeFFT(
         const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
         std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
-    ) const {
-        const int n = inputBuffer.size();
-        this->bitsReverseCopy(inputBuffer, outputBuffer);
+    ) {
+        const size_t n = inputBuffer.size();
+        bitsReverseCopy(inputBuffer, outputBuffer);
+
         for (int s = 1; s <= std::log2(n); s++) {
             const int m = std::pow(2, s);
             const double angle = -2.0 * M_PI / m;
@@ -45,10 +50,10 @@ namespace audio {
     void AudioHelper::bitsReverseCopy(
         const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
         std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
-    ) const {
-        const int numBits = std::log2(inputBuffer.size());;
+    ) {
+        const int numBits = std::log2(inputBuffer.size());
         for (int i = 0; i < inputBuffer.size(); i++) {
-            outputBuffer[this->reverseBits(i, numBits)] = inputBuffer[i];
+            outputBuffer[reverseBits(i, numBits)] = inputBuffer[i];
         }
     }
 
