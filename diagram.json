@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "author": "Hugo",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-neopixel-matrix",
+      "id": "neo",
+      "top": 0,
+      "left": 300,
+      "attrs": {
+        "cols": "32",
+        "rows": "8"
+      }
+    }
+  ],
+  "connections": [
+    ["esp:D5", "neo:DIN", "green", ["h0"]],
+    ["esp:GND.1", "neo:GND", "black", ["h0"]],
+    ["esp:VIN", "neo:VCC", "red", ["h0"]]
+  ]
+}
