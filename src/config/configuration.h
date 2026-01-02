@@ -8,7 +8,7 @@
 namespace config {
 
 // LED Matrix configuration
-#define LED_PIN 5       // Using GPIO 5 (safe pin)
+#define LED_PIN 23       // Using GPIO 23 (safe pin)
 #define NUM_LEDS 256     // 8x32 matrix
 #define MATRIX_WIDTH 32
 #define MATRIX_HEIGHT 8
@@ -18,7 +18,7 @@ namespace config {
 
 
 // Microphone configuration
-#define MIC_PIN 36      // GPIO 36 (ADC1_0)
+#define MIC_PIN 34      // GPIO 34 (ADC1_0)
 #define AUDIO_LOWER_BOUND 0
 #define AUDIO_UPPER_BOUND 4095
 #define MIC_BUFFER_SIZE 256

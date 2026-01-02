@@ -28,7 +28,9 @@ namespace state {
 
             /* Configure microphone pin */
             Serial.println("State machine: Initializing Microphone Input");
-            // pinMode(MIC_PIN, INPUT);
+            pinMode(MIC_PIN, INPUT);
+            analogReadResolution(12);
+            analogSetAttenuation(ADC_11db);
         }
 
         AudioState AudioStateMachine::getCurrentState() const {
