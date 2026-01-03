@@ -22,5 +22,4 @@ void setup() {
 void loop() {
     const state::AudioState currentState = audioStateMachine->getCurrentState();
     audioStateMachine->processState(currentState);
-    delay(10);
 }

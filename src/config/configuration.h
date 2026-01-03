@@ -12,7 +12,7 @@ namespace config {
 #define NUM_LEDS 256     // 8x32 matrix
 #define MATRIX_WIDTH 32
 #define MATRIX_HEIGHT 8
-#define START_BRIGHTNESS 128     // Start at 50% brightness
+#define START_BRIGHTNESS 10     // Start at 10% brightness
 #define LED_TYPE WS2812B
 #define COLOR_ORDER  GRB
 
@@ -24,6 +24,8 @@ namespace config {
 #define MIC_BUFFER_SIZE 256
 #define MIN_MAGNITUDE 0
 #define MAX_MAGNITUDE 10000
+
+#define MIN_FREQ_BIN 2
 
 }
 #endif //AUDIO_REACTIVE_LED_LEDCONFIGURATION_H

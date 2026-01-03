@@ -10,15 +10,19 @@
 #include <complex>
 
 #include "crgb.h"
-#include "config/configuration.h"  // pour MATRIX_WIDTH
-
+#include "config/configuration.h"
 
 namespace led {
     class LEDHelper {
     public:
-        static void updateLED(const std::array<double, MATRIX_WIDTH> &columnValues, CRGB *leds);
+        static void updateLED(
+            const std::array<double, MATRIX_WIDTH> &columnValues,
+            CRGB *leds
+        );
 
-        static std::array<double, MATRIX_WIDTH> mapFrequenciesToColumnsMagnitudes(const std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer);
+        static std::array<double, MATRIX_WIDTH> mapFrequenciesToColumnsMagnitudes(
+            const std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
+        );
 
         static uint16_t resolveLeftRightLEDIndex(uint8_t x, uint8_t y);
         static uint16_t resolveZigzagLEDIndex(uint8_t x, uint8_t y);

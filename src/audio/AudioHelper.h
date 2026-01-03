@@ -15,11 +15,11 @@ namespace audio {
     public:
         explicit AudioHelper(const AudioSampler &audio_sampler);
 
-        std::complex<double> readOneSample();
+        static std::complex<double> readOneSample();
 
         static std::array<std::complex<double>, MIC_BUFFER_SIZE> iterativeFFT(
-                const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
-                std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
+            const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
+            std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
         );
 
     private:
@@ -28,7 +28,7 @@ namespace audio {
         static void bitsReverseCopy(
             const std::array<std::complex<double>, MIC_BUFFER_SIZE> &inputBuffer,
             std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
-        ) ;
+        );
 
         static unsigned int reverseBits(unsigned int n, int numBits);
     };

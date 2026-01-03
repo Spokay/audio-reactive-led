@@ -4,18 +4,27 @@
 
 
 #include "LEDHelper.h"
-
+#include "MagnitudeFilter.h"
 #include <Arduino.h>
 #include <array>
 #include <complex>
-
-#include "crgb.h"
-#include "config/configuration.h"
+#include <algorithm>
 
 namespace led {
-    void LEDHelper::updateLED(const std::array<double, MATRIX_WIDTH> &columnValues, CRGB *leds) {
+    void LEDHelper::updateLED(
+        const std::array<double, MATRIX_WIDTH> &columnValues,
+        CRGB *leds
+    ) {
         for (int x = 0; x < MATRIX_WIDTH; x++) {
-            int numLEDsToLight = map(columnValues[x], MIN_MAGNITUDE, MAX_MAGNITUDE, 0, MATRIX_HEIGHT);
+            int numLEDsToLight = static_cast<int>(
+                map(
+                    static_cast<long>(columnValues[x]),
+                    MIN_MAGNITUDE,
+                    MAX_MAGNITUDE,
+                    0,
+                    MATRIX_HEIGHT
+                )
+            );
             numLEDsToLight = constrain(numLEDsToLight, 0, MATRIX_HEIGHT);
 
             for (int y = 0; y < MATRIX_HEIGHT; y++) {
@@ -31,19 +40,25 @@ namespace led {
         }
     }
 
-    std::array<double, MATRIX_WIDTH> LEDHelper::mapFrequenciesToColumnsMagnitudes(const std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer) {
+    std::array<double, MATRIX_WIDTH> LEDHelper::mapFrequenciesToColumnsMagnitudes(
+        const std::array<std::complex<double>, MIC_BUFFER_SIZE> &outputBuffer
+    ) {
         std::array<double, MATRIX_WIDTH> columnsValues{};
-
         constexpr int usableBins = MIC_BUFFER_SIZE / 2;
 
-        // Logarithmic mapping
+        // Dynamic threshold
+        const double noiseFloor = MagnitudeFilter::calculateNoiseFloor(outputBuffer);
+        const double threshold = MagnitudeFilter::calculateDynamicThreshold(noiseFloor);
+
         for (int col = 0; col < MATRIX_WIDTH; ++col) {
-            // Logarithmic ratio
             const float colRatio = static_cast<float>(col) / MATRIX_WIDTH;
             const float nextColRatio = static_cast<float>(col + 1) / MATRIX_WIDTH;
 
-            // Exponential mapping
-            const int startIdx = static_cast<int>(colRatio * colRatio * usableBins);
+            // Ignore DC and very low-frequency bins
+            const int startIdx = std::max(
+                MIN_FREQ_BIN,
+                static_cast<int>(colRatio * colRatio * usableBins)
+            );
             int endIdx = static_cast<int>(nextColRatio * nextColRatio * usableBins);
 
             if (endIdx <= startIdx) endIdx = startIdx + 1;
@@ -52,17 +67,22 @@ namespace led {
             double sum = 0.0;
             int count = 0;
             for (int i = startIdx; i < endIdx; ++i) {
-                sum += std::abs(outputBuffer[i]);
-                count++;
+                const double magnitude = std::abs(outputBuffer[i]);
+
+                if (MagnitudeFilter::isAboveThreshold(magnitude, threshold)) {
+                    sum += magnitude;
+                    count++;
+                }
             }
 
             columnsValues[col] = (count > 0) ? (sum / count) : 0.0;
         }
+
         return columnsValues;
     }
 
     uint16_t LEDHelper::resolveLeftRightLEDIndex(const uint8_t x, const uint8_t y) {
-            return y * MATRIX_WIDTH + x;
+        return y * MATRIX_WIDTH + x;
     }
 
     uint16_t LEDHelper::resolveZigzagLEDIndex(const uint8_t x, const uint8_t y) {

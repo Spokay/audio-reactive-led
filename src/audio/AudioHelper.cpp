@@ -10,16 +10,19 @@
 #include <esp32-hal-adc.h>
 
 #include "AudioSampler.h"
+#include "SignalProcessor.h"
 #include "config/configuration.h"
 namespace audio {
 
-    AudioHelper::AudioHelper(
-        const AudioSampler &audio_sampler
-    ) : audioSampler(audio_sampler) {}
+    AudioHelper::AudioHelper(const AudioSampler &audio_sampler)
+        : audioSampler(audio_sampler) {}
 
     std::complex<double> AudioHelper::readOneSample() {
-        double sample = audioSampler.generateSample();
-        return {sample, 0.0};
+        const double sample = analogRead(MIC_PIN);
+        const double dcOffset = SignalProcessor::getDCOffset();
+        double centeredSample = sample - dcOffset;
+
+        return {centeredSample, 0.0};
     }
 
     std::array<std::complex<double>, MIC_BUFFER_SIZE> AudioHelper::iterativeFFT(
